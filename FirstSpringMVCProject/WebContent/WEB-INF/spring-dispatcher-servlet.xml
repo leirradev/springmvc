@@ -1,0 +1,109 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+						http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+						http://www.springframework.org/schema/context
+						http://www.springframework.org/schema/context/spring-context-3.0.xsd
+						http://www.springframework.org/schema/mvc
+						http://www.springframework.org/schema/mvc/spring-mvc.xsd">
+
+	<!-- the default handler mapping mechanism, which maps URL requests to the name of the beans
+	Actually, declare BeanNameUrlHandlerMapping is optional, by default, if Spring can’t found handler mapping,
+	 the DispatcherServlet will creates a BeanNameUrlHandlerMapping automatically -->
+	<!-- <bean id="HandlerMapping" class="org.springframework.web.servlet.handler.BeanNameUrlHandlerMapping"></bean> -->
+
+	<!-- <bean name="/welcome.html" class="com.gontuseries.hellocontroller.HelloController"></bean> -->
+
+	<!-- enables auto scanning feature. it will scan the classpath for all the classes under specified package and look
+	for each class to see if it has @Controller, @Repository, @Service, or @Component. if it does Spring will register the
+	class with the bean factory as if you'd typed <bean> in xml config files.
+	tells Spring to scan those packages with annotations -->
+	<context:component-scan base-package="com.gontuseries.studentadmissioncontroller"></context:component-scan>
+
+	<!-- add xmlns:mvc="http://www.springframework.org/schema/mvc" to use mvc:annotation-driven 
+	can define spring beans dependencies without having to specify bunch of elements in xml, implement an interface or
+	extend a base class.
+	registers a requestmappinghandlermapping, a requestmappinghandleradapter and an exceptionhandlerexceptionresolver to
+	support the annotated controller methods like @requestmapping, @exceptionhandler etc that come with MVC -->
+	<mvc:annotation-driven />
+
+	<!--  used to intercept client requests and process them. Sometimes we want to intercept the HTTP Request and do some
+	 processing before handing it over to the controller handler methods. 
+	  to wire all the interceptors. We can also provide URI pattern to match before including the spring interceptor 
+	  for the request through mapping element-->
+	<mvc:interceptors>
+		<mvc:interceptor>
+			<mvc:mapping path="/admissionForm.html"/>
+			<bean class="com.gontuseries.studentadmissioncontroller.DayOfWeekBasedAccessInterceptor"></bean>
+		</mvc:interceptor>
+		
+		<!-- Interceptor that allows for changing the current locale on every request, via a configurable request parameter
+		 (default parameter name: "locale") -->
+		<bean class="org.springframework.web.servlet.i18n.LocaleChangeInterceptor">
+			<property name="paramName" value="siteLanguage"></property>
+		</bean>
+		
+		<!-- allows for changing the current theme on every request, via a configurable request parameter -->
+		<bean class="org.springframework.web.servlet.theme.ThemeChangeInterceptor">
+			<property name="paramName" value="siteTheme"></property>
+		</bean>
+	</mvc:interceptors>
+
+	<mvc:resources location="/WEB-INF/" mapping="/resources/**"></mvc:resources>
+
+	<!-- allows us to set properties such as prefix or suffix to the view name to generate the final View page URL -->
+	<bean id="viewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="prefix">
+			<value>/WEB-INF/</value>
+		</property>
+
+		<property name="suffix">
+			<value>.jsp</value>
+		</property>
+	</bean>
+
+	<!-- gives you flexible solution of static text management in Spring MVC. makes text management more convenient,
+	 all text will be concentrated in the one property file -->
+	<bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
+		<property name="basename" value="/WEB-INF/studentmessages"></property>
+		
+		<property name="cacheSeconds" value="1"></property>
+	</bean>
+
+	<!-- internally persists a custom locale and/or a time zone information as browser cookie -->
+	<bean id="localeResolver" class="org.springframework.web.servlet.i18n.CookieLocaleResolver">
+		<property name="defaultLocale" value="en"></property>
+		<property name="cookieName" value="localCookie"></property>
+		<property name="cookieMaxAge" value="3600"></property>
+	</bean>
+
+	<!-- responsible for locating the themes. By setting the basenamePrefix, we can prefix the themes. The dot after the 
+	name indicates that this is a directory -->
+	<bean id="themeSource" class="org.springframework.ui.context.support.ResourceBundleThemeSource">
+		<property name="basenamePrefix" value="theme-"></property>
+	</bean>
+
+	<!-- uses a cookie to select the theme, with fallback to the default theme -->
+	<bean id="themeResolver" class="org.springframework.web.servlet.theme.CookieThemeResolver">
+		<property name="defaultThemeName" value="green"></property>
+	</bean>
+	
+	<!-- is an implementation of HandlerExceptionResolver. It can be used to map exception classes to view names and 
+	view names to status codes -->
+	<bean id="simpleMappingExceptionResolver" class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
+		<property name="exceptionMappings">
+			<map>
+				<entry key="NullPointerException" value="NullPointerException"></entry>
+				<entry key="IOException" value="IOException"></entry>
+			</map>
+		</property>
+		
+		<property name="defaultErrorView" value="Exception"></property>
+		
+		<property name="warnLogCategory" value="MVCLogger"></property>
+	</bean>
+
+</beans>
